@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	SEARXAPI string `toml:"SEARX_API"`
+	ServerPort int    `toml:"SERVER_PORT"`
 }
 
 func LoadConfigOrDefault(fn string) *Config {

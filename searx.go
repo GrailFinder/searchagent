@@ -34,8 +34,8 @@ type SearXNGResponse struct {
 	Results []SearXNGResult `json:"results"`
 }
 
-// Config represents the configuration structure
-type Config struct {
+// Internal config for searx.go only
+type searxConfig struct {
 	SEARXAPI string `toml:"SEARX_API"`
 }
 
@@ -43,7 +43,7 @@ type Config struct {
 // Uses the configuration from config.toml for the API endpoint
 func NewSearXNGAPISearcher(configPath string) *SearXNGAPISearcher {
 	// Load the configuration
-	cfg := &Config{}
+	cfg := &searxConfig{}
 	_, err := toml.DecodeFile(configPath, cfg)
 	if err != nil {
 		// If config loading fails, use a default or panic
