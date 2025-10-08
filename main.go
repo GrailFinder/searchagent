@@ -13,6 +13,7 @@ func main() {
 	// Define command line flags
 	outputFile := flag.String("output", "", "Output file to save results (default: stdout)")
 	limit := flag.Int("limit", 3, "Maximum number of results to return")
+	searchType := flag.String("type", "scraper", "Search type: scraper or api")
 	flag.Parse()
 
 	// Get the search query from command line arguments
@@ -22,8 +23,16 @@ func main() {
 
 	query := strings.Join(flag.Args(), " ")
 
-	// Initialize the scraper
-	searcher := NewWebScraper()
+	// Initialize the searcher based on type
+	var searcher Searcher
+	switch *searchType {
+	case "api":
+		searcher = NewSearchService(SearcherTypeAPI)
+	case "scraper":
+		fallthrough
+	default:
+		searcher = NewWebScraper()
+	}
 
 	// Perform the search
 	ctx := context.Background()

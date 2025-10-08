@@ -29,7 +29,7 @@ func NewSearchService(t SearcherType) Searcher {
 	case SearcherTypeScraper:
 		return NewWebScraper()
 	case SearcherTypeAPI:
-		panic("not implemented")
+		return NewSearXNGAPISearcher("config.toml") // Use config.toml for API endpoint
 	default:
 		panic("not known searcher type")
 	}
