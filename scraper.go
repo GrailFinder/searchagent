@@ -34,7 +34,7 @@ func (ws *WebScraper) Search(ctx context.Context, query string, limit int) ([]Se
 	// Fallback to simulated search if we can't get real results
 	// This is just a placeholder - in a real implementation you'd connect to search APIs
 	// like Google Custom Search API, Bing Search API, etc.
-	
+
 	// For now, let's implement a basic search that uses DuckDuckGo HTML search
 	// which doesn't require an API key but is subject to rate limits and may break
 	// if DuckDuckGo changes their HTML structure
@@ -113,7 +113,7 @@ func (ws *WebScraper) parseDuckDuckGoResults(htmlContent string, limit int) []Se
 	}
 
 	var results []SearchResult
-	
+
 	var parse func(*html.Node)
 	parse = func(n *html.Node) {
 		if n.Type == html.ElementNode && n.Data == "div" {
@@ -142,7 +142,7 @@ func (ws *WebScraper) parseDuckDuckGoResults(htmlContent string, limit int) []Se
 // extractResultFromNode extracts the title, URL and content from a search result node
 func (ws *WebScraper) extractResultFromNode(n *html.Node) SearchResult {
 	var result SearchResult
-	
+
 	var find func(*html.Node)
 	find = func(n *html.Node) {
 		if n.Type == html.ElementNode {
@@ -154,16 +154,16 @@ func (ws *WebScraper) extractResultFromNode(n *html.Node) SearchResult {
 						break
 					}
 				}
-				
+
 				// Get title text
 				result.Title = ws.getTextContent(n)
 			}
-			
+
 			// Look for the snippet (usually has class 'result__snippet')
 			if n.Data == "a" && ws.hasClass(n, "result__snippet") {
 				result.Content = ws.getTextContent(n)
 			}
-			
+
 			// Look for the URL text (sometimes available in separate element)
 			if n.Data == "a" && ws.hasClass(n, "result__url") {
 				if result.URL == "" {
@@ -173,15 +173,15 @@ func (ws *WebScraper) extractResultFromNode(n *html.Node) SearchResult {
 				}
 			}
 		}
-		
+
 		// Recursively look in children
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			find(c)
 		}
 	}
-	
+
 	find(n)
-	
+
 	// If content is still empty, extract any relevant text from the description
 	if result.Content == "" {
 		var extractDesc func(*html.Node)
@@ -192,7 +192,7 @@ func (ws *WebScraper) extractResultFromNode(n *html.Node) SearchResult {
 					result.Content = text
 				}
 			}
-			
+
 			for c := n.FirstChild; c != nil; c = c.NextSibling {
 				if n.Data != "a" { // Avoid re-extracting from title links
 					extractDesc(c)
@@ -201,13 +201,13 @@ func (ws *WebScraper) extractResultFromNode(n *html.Node) SearchResult {
 		}
 		extractDesc(n)
 	}
-	
+
 	// Clean up the content
 	result.Content = strings.TrimSpace(result.Content)
 	if len(result.Content) > 300 { // Limit content length
 		result.Content = result.Content[:300] + "..."
 	}
-	
+
 	return result
 }
 
@@ -229,54 +229,20 @@ func (ws *WebScraper) hasClass(n *html.Node, class string) bool {
 // getTextContent extracts text content from an HTML node
 func (ws *WebScraper) getTextContent(n *html.Node) string {
 	var text string
-	
+
 	var extractText func(*html.Node)
 	extractText = func(n *html.Node) {
 		if n.Type == html.TextNode {
 			text += n.Data
 		}
-		
+
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			extractText(c)
 		}
 	}
-	
+
 	extractText(n)
 	return strings.TrimSpace(text)
-}
-
-// simulateSearch creates mock search results for demonstration - used as fallback
-func (ws *WebScraper) simulateSearch(ctx context.Context, query string, limit int) ([]SearchResult, error) {
-	results := []SearchResult{
-		{
-			URL:     "https://en.wikipedia.org/wiki/Weather",
-			Title:   "Weather - Wikipedia",
-			Content: "Weather is the state of the atmosphere, describing for example the degree to which it is hot or cold, wet or dry, calm or stormy, clear or cloudy.",
-		},
-		{
-			URL:     "https://www.weather.com/weather/tenday/l/London",
-			Title:   "10 Day Weather Forecast - London",
-			Content: "Get the latest weather forecast for London. Today's weather is partly cloudy with a high of 18°C and a low of 12°C.",
-		},
-		{
-			URL:     "https://www.bbc.com/weather/2643743",
-			Title:   "London Weather - BBC",
-			Content: "London weather forecast. Current conditions include temperature of 15°C, humidity at 65%, and wind speed of 12 km/h.",
-		},
-	}
-	if limit < len(results) {
-		results = results[:limit]
-	}
-	// For real implementation, fetch each URL and extract content
-	for i := range results {
-		content, err := ws.extractContentFromURL(ctx, results[i].URL)
-		if err != nil {
-			// If we can't fetch content, keep the placeholder
-			continue
-		}
-		results[i].Content = content
-	}
-	return results, nil
 }
 
 // extractContentFromURL fetches and extracts meaningful text content from a webpage
@@ -351,4 +317,3 @@ func extractTextFromHTML(htmlContent string) string {
 
 	return text
 }
-
