@@ -31,22 +31,18 @@ func (ws *WebScraper) Search(ctx context.Context, query string, limit int) ([]Se
 
 	results := make([]SearchResult, 0, limit)
 
-	// Fallback to simulated search if we can't get real results
-	// This is just a placeholder - in a real implementation you'd connect to search APIs
-	// like Google Custom Search API, Bing Search API, etc.
-
 	// For now, let's implement a basic search that uses DuckDuckGo HTML search
 	// which doesn't require an API key but is subject to rate limits and may break
 	// if DuckDuckGo changes their HTML structure
 
 	searchResults, err := ws.searchDuckDuckGo(ctx, query, limit)
-	if err != nil || len(searchResults) == 0 {
-		// If DuckDuckGo search fails or returns no results, use simulated results
-		simulatedResults, err := ws.simulateSearch(ctx, query, limit)
-		if err != nil {
-			return nil, err
-		}
-		searchResults = simulatedResults
+	if err != nil {
+		return nil, err
+	}
+
+	// If no results found, return empty results
+	if len(searchResults) == 0 {
+		return []SearchResult{}, nil
 	}
 
 	for i, result := range searchResults {

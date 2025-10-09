@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"searchagent/config"
+	"searchagent/models"
 )
 
 type SearchRequest struct {
@@ -106,6 +107,48 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// describeHandler returns the tool schema for LLM consumption
+func (s *Server) describeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Define the search tool schema
+	tool := models.Tool{
+		Type: "function",
+		Function: models.ToolFunc{
+			Name:        "web_search",
+			Description: "Perform a web search to find information on various topics",
+			Parameters: models.ToolFuncParams{
+				Type: "object",
+				Properties: map[string]models.ToolArgProps{
+					"query": {
+						Type:        "string",
+						Description: "The search query to find information about",
+					},
+					"search_type": {
+						Type:        "string",
+						Description: "Type of search to perform: 'api' for SearXNG API search or 'scraper' for web scraping (default: 'scraper')",
+					},
+					"num_results": {
+						Type:        "integer",
+						Description: "Maximum number of results to return (default: 10)",
+					},
+				},
+				Required: []string{"query"},
+			},
+		},
+	}
+
+	// Set content type and encode response as JSON
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(tool); err != nil {
+		slog.Error("Failed to encode tool schema", "error", err)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
+}
+
 // Server represents the HTTP server
 type Server struct {
 	config *config.Config
@@ -142,6 +185,7 @@ func (s *Server) Search(query string, searchType string, numResults int) ([]Sear
 // Start starts the HTTP server
 func (s *Server) Start(port int) error {
 	http.HandleFunc("/search", s.searchHandler)
+	http.HandleFunc("/describe", s.describeHandler)
 
 	addr := fmt.Sprintf(":%d", port)
 	slog.Info("Starting server", "address", addr)
