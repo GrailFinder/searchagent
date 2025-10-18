@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"searchagent/config"
-	"searchagent/models"
-	"searchagent/searcher"
+	"github.com/grailfinder/searchagent/config"
+	"github.com/grailfinder/searchagent/models"
+	"github.com/grailfinder/searchagent/searcher"
 )
 
 type SearchRequest struct {

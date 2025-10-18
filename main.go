@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"searchagent/config"
-	"searchagent/searcher"
+	"github.com/grailfinder/searchagent/config"
+	"github.com/grailfinder/searchagent/searcher"
 )
 
 func main() {

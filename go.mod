@@ -1,4 +1,4 @@
-module searchagent
+module github.com/grailfinder/searchagent
 
 go 1.25.1
 
