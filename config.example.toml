@@ -1,2 +1,2 @@
-SEARX_API="https://searx.grailfinder.net"
-SERVER_PORT=8080
+SEARX_API="your personal searx instance with available api search"
+SERVER_PORT=8090
