@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"searchagent/config"
+	"searchagent/searcher"
 )
 
 func main() {
@@ -20,11 +21,9 @@ func main() {
 	serverMode := flag.Bool("server", false, "Run in server mode")
 	configPath := flag.String("config", "", "Path to config file")
 	flag.Parse()
-
 	if *serverMode {
 		// Load configuration
 		cfg := config.LoadConfigOrDefault(*configPath)
-
 		// Create and start the server
 		server := NewServer(cfg)
 		if err := server.Start(cfg.ServerPort); err != nil {
@@ -36,33 +35,28 @@ func main() {
 		if len(flag.Args()) == 0 {
 			log.Fatal("Usage: searchagent [options] <search query>")
 		}
-
 		query := strings.Join(flag.Args(), " ")
-
 		// Initialize the searcher based on type
-		var searcher Searcher
+		var s searcher.Searcher
 		switch *searchType {
 		case "api":
-			searcher = NewSearchService(SearcherTypeAPI)
+			s = searcher.NewSearchService(searcher.SearcherTypeAPI)
 		case "scraper":
 			fallthrough
 		default:
-			searcher = NewWebScraper()
+			s = searcher.NewWebScraper()
 		}
-
 		// Perform the search
 		ctx := context.Background()
-		results, err := searcher.Search(ctx, query, *limit)
+		results, err := s.Search(ctx, query, *limit)
 		if err != nil {
 			log.Fatalf("Search error: %v", err)
 		}
-
 		// Format results as a map [page_link: content]
 		resultsMap := make(map[string]string)
 		for _, result := range results {
 			resultsMap[result.URL] = result.Content
 		}
-
 		// Output the results
 		if *outputFile != "" {
 			// Save to file
@@ -71,7 +65,6 @@ func main() {
 				log.Fatalf("Error creating output file: %v", err)
 			}
 			defer file.Close()
-
 			encoder := json.NewEncoder(file)
 			encoder.SetIndent("", "  ")
 			if err := encoder.Encode(resultsMap); err != nil {

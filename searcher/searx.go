@@ -1,4 +1,4 @@
-package main
+package searcher
 
 import (
 	"compress/gzip"
@@ -16,16 +16,16 @@ import (
 
 // SearXNGAPISearcher implements the Searcher interface using the SearXNG API
 type SearXNGAPISearcher struct {
-	client *http.Client
+	client  *http.Client
 	baseURL string
 }
 
 // SearXNGResult represents a single search result from the SearXNG API
 type SearXNGResult struct {
-	Title       string `json:"title"`
-	URL         string `json:"url"`
-	Content     string `json:"content"`
-	Engine      string `json:"engine"`
+	Title         string `json:"title"`
+	URL           string `json:"url"`
+	Content       string `json:"content"`
+	Engine        string `json:"engine"`
 	PublishedDate string `json:"publishedDate"`
 }
 
@@ -48,16 +48,16 @@ func NewSearXNGAPISearcher(configPath string) *SearXNGAPISearcher {
 	if err != nil {
 		// If config loading fails, use a default or panic
 		// For now, let's use a default instance
-		cfg.SEARXAPI = "https://searx.grailfinder.net/"  // Use the API from the example config
+		cfg.SEARXAPI = "https://searx.grailfinder.net/" // Use the API from the example config
 	}
-	
+
 	baseURL := cfg.SEARXAPI
-	
+
 	// Ensure the base URL ends with a slash
 	if !strings.HasSuffix(baseURL, "/") {
 		baseURL += "/"
 	}
-	
+
 	return &SearXNGAPISearcher{
 		client: &http.Client{
 			Timeout: 10 * time.Second,
@@ -70,28 +70,28 @@ func (s *SearXNGAPISearcher) Search(ctx context.Context, query string, limit int
 	// Try the API endpoint first, then fall back to /search if needed
 	endpoints := []string{"/api/v1/search", "/search"}
 	var apiResponse SearXNGResponse
-	
+
 	for _, endpoint := range endpoints {
 		// Build the API URL
 		apiURL := fmt.Sprintf("%s%s", s.baseURL, strings.TrimPrefix(endpoint, "/"))
-		
+
 		// Create URL parameters
 		params := url.Values{}
 		params.Set("q", query)
 		params.Set("format", "json")
-		
+
 		// Note: SearXNG API doesn't have a direct limit parameter in URL by default,
 		// so we'll fetch results and limit them after parsing
-		
+
 		// Construct the full URL with parameters
 		fullURL := fmt.Sprintf("%s?%s", apiURL, params.Encode())
-		
+
 		// Create the HTTP request
 		req, err := http.NewRequestWithContext(ctx, "GET", fullURL, nil)
 		if err != nil {
 			continue // Try next endpoint
 		}
-		
+
 		// Add headers to avoid being blocked - using more realistic browser-like headers
 		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 		req.Header.Set("Accept", "application/json, */*;q=0.1") // Prioritize JSON response
@@ -99,13 +99,13 @@ func (s *SearXNGAPISearcher) Search(ctx context.Context, query string, limit int
 		req.Header.Set("Accept-Encoding", "gzip, deflate")
 		req.Header.Set("Connection", "keep-alive")
 		req.Header.Set("Upgrade-Insecure-Requests", "1")
-		
+
 		// Execute the request
 		resp, err := s.client.Do(req)
 		if err != nil {
 			continue // Try next endpoint
 		}
-		
+
 		// Read the response body
 		var body []byte
 		if resp.Header.Get("Content-Encoding") == "gzip" {
@@ -128,7 +128,7 @@ func (s *SearXNGAPISearcher) Search(ctx context.Context, query string, limit int
 				continue // Try next endpoint
 			}
 		}
-		
+
 		// Try to parse the JSON response
 		if err := json.Unmarshal(body, &apiResponse); err != nil {
 			continue // Try next endpoint
@@ -137,11 +137,11 @@ func (s *SearXNGAPISearcher) Search(ctx context.Context, query string, limit int
 			break
 		}
 	}
-	
+
 	if len(apiResponse.Results) == 0 {
 		return nil, fmt.Errorf("no valid JSON response from any endpoint")
 	}
-	
+
 	// Convert the API results to our SearchResult format
 	// Limit results after fetching from API
 	results := make([]SearchResult, 0, limit)
@@ -149,18 +149,18 @@ func (s *SearXNGAPISearcher) Search(ctx context.Context, query string, limit int
 		if len(results) >= limit {
 			break
 		}
-		
+
 		// Skip results with empty title or URL
 		if result.Title == "" || result.URL == "" {
 			continue
 		}
-		
+
 		results = append(results, SearchResult{
 			URL:     result.URL,
 			Title:   result.Title,
 			Content: result.Content,
 		})
 	}
-	
+
 	return results, nil
 }

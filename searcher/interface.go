@@ -1,7 +1,8 @@
-package main
+package searcher
 
 import (
 	"context"
+	"net/url"
 )
 
 // SearcherType represents the type of searcher to use
@@ -22,4 +23,22 @@ type SearchResult struct {
 // Searcher defines the interface for different search implementations
 type Searcher interface {
 	Search(ctx context.Context, query string, limit int) ([]SearchResult, error)
+}
+
+// pick impl
+func NewSearchService(t SearcherType) Searcher {
+	switch t {
+	case SearcherTypeScraper:
+		return NewWebScraper()
+	case SearcherTypeAPI:
+		return NewSearXNGAPISearcher("config.toml") // Use config.toml for API endpoint
+	default:
+		panic("not known searcher type")
+	}
+}
+
+// isValidURL checks if a string is a valid URL
+func isValidURL(input string) bool {
+	_, err := url.ParseRequestURI(input)
+	return err == nil
 }
