@@ -2,6 +2,7 @@ package searcher
 
 import (
 	"context"
+	"fmt"
 )
 
 // SearcherType represents the type of searcher to use
@@ -25,21 +26,21 @@ type Searcher interface {
 }
 
 // NewSearchService creates a new search service based on the provided type.
-// Returns nil if the type is not recognized.
-func NewSearchService(t SearcherType, url string) Searcher {
+// Returns an error if the type is not recognized.
+func NewSearchService(t SearcherType, url string) (Searcher, error) {
 	// url: there must be a better way
 	switch t {
 	case SearcherTypeScraper:
 		if url == "" {
-			url = "httpsy://html.duckduckgo.com/html/?q="
+			url = "https://html.duckduckgo.com/html/?q="
 		}
-		return NewWebScraper(url)
+		return NewWebScraper(url), nil
 	case SearcherTypeAPI:
 		if url == "" {
 			url = "https://searx.grailfinder.net/"
 		}
-		return NewSearXNGAPISearcher(url) // Use config.toml for API endpoint
+		return NewSearXNGAPISearcher(url), nil // Use config.toml for API endpoint
 	default:
-		return nil
+		return nil, fmt.Errorf("unknown searcher type: %s", t)
 	}
 }

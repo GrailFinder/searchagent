@@ -33,11 +33,6 @@ type SearXNGResponse struct {
 	Results []SearXNGResult `json:"results"`
 }
 
-// Internal config for searx.go only
-type searxConfig struct {
-	SEARXAPI string `toml:"SEARX_API"`
-}
-
 // NewSearXNGAPISearcher creates a new instance of SearXNGAPISearcher
 // Uses the configuration from config.toml for the API endpoint
 func NewSearXNGAPISearcher(baseURL string) *SearXNGAPISearcher {

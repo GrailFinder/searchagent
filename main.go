@@ -42,13 +42,17 @@ func main() {
 		query := strings.Join(flag.Args(), " ")
 		// Initialize the searcher based on type
 		var s searcher.Searcher
+		var err error
 		switch *searchType {
 		case "api":
-			s = searcher.NewSearchService(searcher.SearcherTypeAPI)
+			s, err = searcher.NewSearchService(searcher.SearcherTypeAPI, "")
 		case "scraper":
 			fallthrough
 		default:
-			s = searcher.NewSearchService(searcher.SearcherTypeScraper)
+			s, err = searcher.NewSearchService(searcher.SearcherTypeScraper, "")
+		}
+		if err != nil {
+			log.Fatalf("Failed to create searcher: %v", err)
 		}
 		
 		if s == nil {

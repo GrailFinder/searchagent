@@ -156,14 +156,21 @@ func NewServer(cfg *config.Config) *Server {
 // Search performs a search with the given parameters
 func (s *Server) Search(query string, searchType string, numResults int) ([]searcher.SearchResult, error) {
 	var sr searcher.Searcher
+	var err error
 	switch searchType {
 	case "api":
-		sr = searcher.NewSearXNGAPISearcher("config.toml") // Use the API searcher directly
+		sr, err = searcher.NewSearchService(searcher.SearcherTypeAPI, "")
 	case "scraper":
 		fallthrough
 	default:
-		sr = searcher.NewWebScraper()
+		sr, err = searcher.NewSearchService(searcher.SearcherTypeScraper, "")
 	}
+	
+	if err != nil {
+		slog.Error("Failed to create searcher", "error", err)
+		return nil, err
+	}
+	
 	ctx := context.Background()
 	results, err := sr.Search(ctx, query, numResults)
 	if err != nil {
