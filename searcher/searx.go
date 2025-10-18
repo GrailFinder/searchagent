@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -139,7 +140,7 @@ func (s *SearXNGAPISearcher) Search(ctx context.Context, query string, limit int
 	}
 
 	if len(apiResponse.Results) == 0 {
-		return nil, fmt.Errorf("no valid JSON response from any endpoint")
+		return nil, errors.New("no valid JSON response from any endpoint")
 	}
 
 	// Convert the API results to our SearchResult format

@@ -2,7 +2,6 @@ package searcher
 
 import (
 	"context"
-	"net/url"
 )
 
 // SearcherType represents the type of searcher to use
@@ -38,8 +37,4 @@ func NewSearchService(t SearcherType) Searcher {
 	}
 }
 
-// isValidURL checks if a string is a valid URL
-func isValidURL(input string) bool {
-	_, err := url.ParseRequestURI(input)
-	return err == nil
-}
+

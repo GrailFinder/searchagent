@@ -53,7 +53,7 @@ func (ws *WebScraper) Search(ctx context.Context, query string, limit int) ([]Se
 func (ws *WebScraper) searchDuckDuckGo(ctx context.Context, query string, limit int) ([]SearchResult, error) {
 	// Encode the query for URL
 	encodedQuery := strings.ReplaceAll(query, " ", "+")
-	searchURL := fmt.Sprintf("https://html.duckduckgo.com/html/?q=%s", encodedQuery)
+	searchURL := "https://html.duckduckgo.com/html/?q=" + encodedQuery
 	req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
 	if err != nil {
 		return nil, err

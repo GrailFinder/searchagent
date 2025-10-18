@@ -40,14 +40,15 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req SearchRequest
-	if r.Method == http.MethodPost {
+	switch r.Method {
+	case http.MethodPost:
 		// Parse JSON request body
 		decoder := json.NewDecoder(r.Body)
 		if err := decoder.Decode(&req); err != nil {
 			http.Error(w, "Invalid JSON in request body", http.StatusBadRequest)
 			return
 		}
-	} else if r.Method == http.MethodGet {
+	case http.MethodGet:
 		// Parse query parameters from URL
 		req.Query = r.URL.Query().Get("q")
 		req.SearchType = r.URL.Query().Get("type")
