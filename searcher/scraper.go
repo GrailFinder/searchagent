@@ -13,14 +13,16 @@ import (
 
 // WebScraper implements the Searcher interface using web scraping
 type WebScraper struct {
-	client *http.Client
+	client  *http.Client
+	baseURL string
 }
 
-func NewWebScraper() *WebScraper {
+func NewWebScraper(url string) *WebScraper {
 	return &WebScraper{
 		client: &http.Client{
 			Timeout: 10 * time.Second,
 		},
+		baseURL: url,
 	}
 }
 
@@ -53,7 +55,7 @@ func (ws *WebScraper) Search(ctx context.Context, query string, limit int) ([]Se
 func (ws *WebScraper) searchDuckDuckGo(ctx context.Context, query string, limit int) ([]SearchResult, error) {
 	// Encode the query for URL
 	encodedQuery := strings.ReplaceAll(query, " ", "+")
-	searchURL := "https://html.duckduckgo.com/html/?q=" + encodedQuery
+	searchURL := ws.baseURL + encodedQuery
 	req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
 	if err != nil {
 		return nil, err

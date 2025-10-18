@@ -26,15 +26,20 @@ type Searcher interface {
 
 // NewSearchService creates a new search service based on the provided type.
 // Returns nil if the type is not recognized.
-func NewSearchService(t SearcherType) Searcher {
+func NewSearchService(t SearcherType, url string) Searcher {
+	// url: there must be a better way
 	switch t {
 	case SearcherTypeScraper:
-		return NewWebScraper()
+		if url == "" {
+			url = "httpsy://html.duckduckgo.com/html/?q="
+		}
+		return NewWebScraper(url)
 	case SearcherTypeAPI:
-		return NewSearXNGAPISearcher("config.toml") // Use config.toml for API endpoint
+		if url == "" {
+			url = "https://searx.grailfinder.net/"
+		}
+		return NewSearXNGAPISearcher(url) // Use config.toml for API endpoint
 	default:
 		return nil
 	}
 }
-
-

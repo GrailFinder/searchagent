@@ -11,8 +11,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/BurntSushi/toml"
 )
 
 // SearXNGAPISearcher implements the Searcher interface using the SearXNG API
@@ -42,23 +40,12 @@ type searxConfig struct {
 
 // NewSearXNGAPISearcher creates a new instance of SearXNGAPISearcher
 // Uses the configuration from config.toml for the API endpoint
-func NewSearXNGAPISearcher(configPath string) *SearXNGAPISearcher {
+func NewSearXNGAPISearcher(baseURL string) *SearXNGAPISearcher {
 	// Load the configuration
-	cfg := &searxConfig{}
-	_, err := toml.DecodeFile(configPath, cfg)
-	if err != nil {
-		// If config loading fails, use a default or panic
-		// For now, let's use a default instance
-		cfg.SEARXAPI = "https://searx.grailfinder.net/" // Use the API from the example config
-	}
-
-	baseURL := cfg.SEARXAPI
-
 	// Ensure the base URL ends with a slash
 	if !strings.HasSuffix(baseURL, "/") {
 		baseURL += "/"
 	}
-
 	return &SearXNGAPISearcher{
 		client: &http.Client{
 			Timeout: 10 * time.Second,
