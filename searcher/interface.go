@@ -25,7 +25,8 @@ type Searcher interface {
 	Search(ctx context.Context, query string, limit int) ([]SearchResult, error)
 }
 
-// pick impl
+// NewSearchService creates a new search service based on the provided type.
+// Returns nil if the type is not recognized.
 func NewSearchService(t SearcherType) Searcher {
 	switch t {
 	case SearcherTypeScraper:
@@ -33,7 +34,7 @@ func NewSearchService(t SearcherType) Searcher {
 	case SearcherTypeAPI:
 		return NewSearXNGAPISearcher("config.toml") // Use config.toml for API endpoint
 	default:
-		panic("not known searcher type")
+		return nil
 	}
 }
 

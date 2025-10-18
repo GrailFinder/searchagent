@@ -11,15 +11,15 @@ type Config struct {
 	ServerPort int    `toml:"SERVER_PORT"`
 }
 
-func LoadConfigOrDefault(fn string) *Config {
+func LoadConfig(fn string) (*Config, error) {
 	if fn == "" {
 		fn = "config.toml"
 	}
 	config := &Config{}
 	_, err := toml.DecodeFile(fn, &config)
 	if err != nil {
-		slog.Warn("failed to read config from file, loading default", "error", err)
-		panic(err)
+		slog.Warn("failed to read config from file", "error", err)
+		return nil, err
 	}
-	return config
+	return config, nil
 }

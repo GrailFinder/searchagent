@@ -23,7 +23,11 @@ func main() {
 	flag.Parse()
 	if *serverMode {
 		// Load configuration
-		cfg := config.LoadConfigOrDefault(*configPath)
+		cfg, err := config.LoadConfig(*configPath)
+		if err != nil {
+			slog.Error("Failed to load config", "error", err)
+			os.Exit(1)
+		}
 		// Create and start the server
 		server := NewServer(cfg)
 		if err := server.Start(cfg.ServerPort); err != nil {
@@ -44,7 +48,11 @@ func main() {
 		case "scraper":
 			fallthrough
 		default:
-			s = searcher.NewWebScraper()
+			s = searcher.NewSearchService(searcher.SearcherTypeScraper)
+		}
+		
+		if s == nil {
+			log.Fatalf("Unknown search type: %s", *searchType)
 		}
 		// Perform the search
 		ctx := context.Background()
