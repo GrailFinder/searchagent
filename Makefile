@@ -1,7 +1,7 @@
 .PHONY: setconfig run lint
 
 run: setconfig
-	go build -o searchagent
+	go build -o searchagent cmd/searchagent/main.go
 
 setconfig:
 	find config.toml &>/dev/null || cp config.example.toml config.toml

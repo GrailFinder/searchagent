@@ -8,7 +8,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
+)
+
+// Constants for content limits
+const (
+	nodeLimit    = 1000  // Character limit for node content
+	contentLimit = 4000  // Character limit for extracted content
 )
 
 // WebScraper implements the Searcher interface using web scraping
@@ -175,8 +182,8 @@ func (ws *WebScraper) extractResultFromNode(n *html.Node) SearchResult {
 	}
 	// Clean up the content
 	result.Content = strings.TrimSpace(result.Content)
-	if len(result.Content) > 300 { // Limit content length
-		result.Content = result.Content[:300] + "..."
+	if len(result.Content) > nodeLimit { // Limit content length
+		result.Content = result.Content[:nodeLimit] + "..."
 	}
 	return result
 }
@@ -235,38 +242,89 @@ func (ws *WebScraper) extractContentFromURL(ctx context.Context, pageURL string)
 	// Parse the HTML and extract text content
 	content := extractTextFromHTML(string(body))
 	// Limit the content to a reasonable size
-	if len(content) > 2000 {
-		content = content[:2000]
+	if len(content) > contentLimit {
+		content = content[:contentLimit]
 	}
 	return content, nil
 }
 
 // extractTextFromHTML removes HTML tags and returns text content
+// extractTextFromHTML removes HTML tags and returns text content
 func extractTextFromHTML(htmlContent string) string {
-	doc, err := html.Parse(strings.NewReader(htmlContent))
+	// Parse the HTML document
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
 	if err != nil {
 		return ""
 	}
-	var extractText func(*html.Node) string
-	extractText = func(n *html.Node) string {
-		if n.Type == html.TextNode {
-			return n.Data
-		}
-		var text string
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			text += extractText(c)
-		}
-		// Add a space if the current node is a block element
-		if n.Type == html.ElementNode {
-			switch n.Data {
-			case "p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "br", "li", "tr", "td":
-				text += " "
+	
+	// Remove unwanted elements that contain JavaScript, CSS, or other non-content
+	doc.Find("script").Remove()
+	doc.Find("style").Remove() 
+	doc.Find("noscript").Remove()
+	doc.Find("template").Remove()
+	doc.Find("svg").Remove()
+	doc.Find("link").Remove()
+	doc.Find("meta").Remove()
+	
+	// Remove script elements with specific attributes
+	doc.Find("script[type]").Each(func(i int, s *goquery.Selection) {
+		if typeAttr, exists := s.Attr("type"); exists {
+			if typeAttr == "application/ld+json" || 
+			   typeAttr == "application/json" || 
+			   strings.Contains(typeAttr, "script") {
+				s.Remove()
 			}
 		}
-		return text
-	}
-	text := extractText(doc)
+	})
+	
+	// Remove comments, which may contain scripts
+	doc.Find("comment").Remove()
+	
+	// Extract the text content from the cleaned document
+	text := doc.Text()
+	
 	// Clean up extra whitespace
+	text = strings.Join(strings.Fields(text), " ")
+	return text
+}// removeJSCSSPatterns removes obvious JavaScript and CSS content from extracted text
+// This is a backup filter in case some content slips through the goquery filtering
+func removeJSCSSPatterns(text string) string {
+	// With the goquery implementation, most JavaScript/CSS should be filtered during HTML parsing
+	// However, as a backup, remove content that clearly looks like JavaScript/CSS
+	
+	// Remove content that looks like JSON-LD structured data
+	for {
+		startIdx := strings.Index(text, "{\"@context\"")
+		if startIdx == -1 {
+			break
+		}
+		endIdx := startIdx
+		braceCount := 0
+		for i := startIdx; i < len(text); i++ {
+			if text[i] == '{' {
+				braceCount++
+			} else if text[i] == '}' {
+				braceCount--
+				if braceCount == 0 {
+					endIdx = i + 1
+					break
+				}
+			}
+		}
+		
+		if endIdx > startIdx {
+			text = text[:startIdx] + text[endIdx:]
+		} else {
+			// If we couldn't find matching brace, remove up to a reasonable length
+			nextIdx := startIdx + 500
+			if nextIdx > len(text) {
+				nextIdx = len(text)
+			}
+			text = text[:startIdx] + text[nextIdx:]
+		}
+	}
+	
+	// Clean up extra spaces after removals
 	text = strings.Join(strings.Fields(text), " ")
 	return text
 }
