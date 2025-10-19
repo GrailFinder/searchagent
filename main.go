@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/grailfinder/searchagent/config"
-	"github.com/grailfinder/searchagent/searcher"
+	"github.com/GrailFinder/searchagent/config"
+	"github.com/GrailFinder/searchagent/searcher"
 )
 
 func main() {
@@ -54,7 +54,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to create searcher: %v", err)
 		}
-		
+
 		if s == nil {
 			log.Fatalf("Unknown search type: %s", *searchType)
 		}

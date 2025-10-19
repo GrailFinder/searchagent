@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/grailfinder/searchagent/config"
-	"github.com/grailfinder/searchagent/models"
-	"github.com/grailfinder/searchagent/searcher"
+	"github.com/GrailFinder/searchagent/config"
+	"github.com/GrailFinder/searchagent/models"
+	"github.com/GrailFinder/searchagent/searcher"
 )
 
 type SearchRequest struct {
@@ -165,12 +165,12 @@ func (s *Server) Search(query string, searchType string, numResults int) ([]sear
 	default:
 		sr, err = searcher.NewSearchService(searcher.SearcherTypeScraper, "")
 	}
-	
+
 	if err != nil {
 		slog.Error("Failed to create searcher", "error", err)
 		return nil, err
 	}
-	
+
 	ctx := context.Background()
 	results, err := sr.Search(ctx, query, numResults)
 	if err != nil {
@@ -187,4 +187,3 @@ func (s *Server) Start(port int) error {
 	slog.Info("Starting server", "address", addr)
 	return http.ListenAndServe(addr, nil)
 }
-
